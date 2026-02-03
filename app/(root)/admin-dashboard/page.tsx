@@ -1,4 +1,6 @@
- import HeaderBox from '@/components/HeaderBox'
+export const dynamic = "force-dynamic";
+
+import HeaderBox from '@/components/HeaderBox'
 import TotalBalanceBox from '@/components/TotalBalanceBox'
 import RecentContributions from '@/components/RecentContributions'
 import AgihanTable from '@/components/AgihanTable'
