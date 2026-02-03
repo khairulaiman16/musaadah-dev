@@ -11,12 +11,11 @@ const nextConfig = {
 };
 
 export default withSentryConfig(nextConfig, {
-  // Suppresses source map uploading logs during build
   silent: true,
   org: "jsm-x9",
   project: "javascript-nextjs",
 }, {
-  // --- ADD THESE TWO LINES TO FIX THE BUILD ERROR ---
+  // --- ADD THESE TWO LINES TO BYPASS THE 401 ERROR ---
   disableServerWebpackPlugin: true,
   disableClientWebpackPlugin: true,
   // --------------------------------------------------
