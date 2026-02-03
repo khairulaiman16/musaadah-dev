@@ -30,13 +30,13 @@ const MobileNav = ({ user }: MobileNavProps) => {
           />
         </SheetTrigger>
         <SheetContent side="left" className="border-none bg-white">
-          {/* Reduced padding and tighter top layout for cleanliness */}
           <Link href="/" className="cursor-pointer flex items-center gap-1 px-4 mb-4">
             <Image 
               src="/icons/logo.svg"
               width={54}
               height={54}
               alt="Musaadah logo"
+              className="size-[32px]"
             />
             <h1 className="text-26 font-ibm-plex-serif font-bold text-black-1">Musa'adah</h1>
           </Link>
@@ -46,6 +46,9 @@ const MobileNav = ({ user }: MobileNavProps) => {
               <nav className="flex h-full flex-col gap-2 pt-8 text-white">
                 {sidebarLinks.map((item) => {
                   const isActive = pathname === item.route || pathname.startsWith(`${item.route}/`)
+                  
+                  // Extract the Lucide Icon from constants
+                  const Icon = item.icon;
 
                   if (item.label === 'Ahli Jawatankuasa' && !isAdmin) return null;
 
@@ -55,13 +58,12 @@ const MobileNav = ({ user }: MobileNavProps) => {
                         <Link href={item.route}
                           className={cn('mobilenav-sheet_close w-full', { 'bg-bank-gradient': isActive })}
                         >
-                          <Image 
-                            src={item.imgURL}
-                            alt={item.label}
-                            width={20}
-                            height={20}
+                          {/* FIXED: Using Icon component instead of Image */}
+                          <Icon 
+                            size={20}
                             className={cn({
-                              'brightness-[3] invert-0': isActive
+                              'text-white': isActive,
+                              'text-gray-500': !isActive
                             })}
                           />
                           <p className={cn("text-16 font-semibold text-black-2", { "text-white": isActive })}>
@@ -70,21 +72,24 @@ const MobileNav = ({ user }: MobileNavProps) => {
                         </Link>
                       </SheetClose>
 
-                      {/* Nested Sub-sections: Always visible for easier mobile access */}
+                      {/* Nested Sub-sections */}
                       {item.subLinks && (
-                        <div className="flex flex-col ml-12 border-l-2 border-gray-100 mt-1 mb-2">
+                        <div className="flex flex-col ml-10 border-l-2 border-gray-100 mt-1 mb-2">
                           {item.subLinks.map((sub) => {
                              const isSubActive = pathname === sub.route.split('#')[0];
+                             const SubIcon = sub.icon;
                              
                              return (
                               <SheetClose asChild key={sub.label}>
                                 <Link 
                                   href={sub.route}
                                   className={cn(
-                                    "flex py-2 pl-6 pr-4 text-14 transition-all font-medium",
+                                    "flex py-2 pl-6 pr-4 text-14 transition-all font-medium items-center gap-2",
                                     isSubActive ? "text-blue-600" : "text-gray-500"
                                   )}
                                 >
+                                  {/* Optional: Show sub-icons on mobile too */}
+                                  {SubIcon && <SubIcon size={14} />}
                                   {sub.label}
                                 </Link>
                               </SheetClose>

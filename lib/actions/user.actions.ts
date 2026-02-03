@@ -132,21 +132,21 @@ export const updateUserRole = async ({ documentId, role }: { documentId: string,
   }
 }
 
-export const getAllUsers = async () => {
-  try {
-    const { database } = await createAdminClient();
+// export const getAllUsers = async () => {
+//   try {
+//     const { database } = await createAdminClient();
 
-    const users = await database.listDocuments(
-      DATABASE_ID!,
-      USER_COLLECTION_ID!
-    );
+//     const users = await database.listDocuments(
+//       DATABASE_ID!,
+//       USER_COLLECTION_ID!
+//     );
 
-    return parseStringify(users.documents);
-  } catch (error) {
-    console.error("Error fetching users:", error);
-    return null;
-  }
-}
+//     return parseStringify(users.documents);
+//   } catch (error) {
+//     console.error("Error fetching users:", error);
+//     return null;
+//   }
+// }
 export const logoutAccount = async () => {
   try {
     const { account } = await createSessionClient();
@@ -159,6 +159,40 @@ export const logoutAccount = async () => {
   }
 }
 
+export const promoteMemberToKJ = async (userId: string) => {
+  try {
+    const { database } = await createAdminClient();
+
+    const updatedUser = await database.updateDocument(
+      DATABASE_ID!,
+      USER_COLLECTION_ID!, // Ensure this matches your env/config
+      userId,
+      { role: 'kj' }
+    );
+
+    revalidatePath('/ahli-jawatankuasa');
+    return parseStringify({ success: true, data: updatedUser });
+  } catch (error) {
+    console.error("Error promoting user:", error);
+    return parseStringify({ success: false, message: "Gagal menaik taraf peranan ahli." });
+  }
+}
+
+export const getAllUsers = async () => {
+  try {
+    const { database } = await createAdminClient();
+
+    const users = await database.listDocuments(
+      DATABASE_ID!,
+      USER_COLLECTION_ID!,
+    );
+
+    return parseStringify(users.documents);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    return [];
+  }
+}
 export const createLinkToken = async (user: User) => {
   try {
     const tokenParams = {

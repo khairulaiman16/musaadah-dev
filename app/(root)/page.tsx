@@ -8,10 +8,18 @@ import { getRecentAgihan } from '@/lib/actions/wang-keluar.actions';
 import { getCommitteeMembers } from '@/lib/actions/jawatankuasa';
 import Link from 'next/link';
 import { ArrowRight, Activity, Users, PlusCircle, Send } from 'lucide-react';
+import { redirect } from "next/navigation";
 
 export default async function Home({ searchParams: { page } }: SearchParamProps) {
-  const currentPage = Number(page as string) || 1;
   const loggedIn = await getLoggedInUser();
+  if (!loggedIn) redirect('/sign-in');
+
+  // REDIRECT BASED ON ROLE
+  // if (loggedIn.role === 'urussetia') redirect('/urussetia');
+  if (loggedIn.role === 'kj') redirect('/bod-dashboard');
+  if (loggedIn.role === 'kp') redirect('/admin-dashboard');
+
+  // Fallback for existing admin logic
   const isAdmin = loggedIn?.role === 'admin';
 
   const [penerimaan, agihan, members] = await Promise.all([

@@ -1,68 +1,86 @@
-import HeaderBox from '@/components/HeaderBox'
-import CommitteeForm from '@/components/CommitteeForm'
-import RoleManagement from '@/components/RoleManagement'
-import AttendanceTracker from '@/components/AttendanceTracker'
-import { getLoggedInUser, getAllUsers } from '@/lib/actions/user.actions';
-import { getCommitteeMembers } from '@/lib/actions/jawatankuasa'; // You'll need this action
-import { redirect } from 'next/navigation';
+import React from 'react'
+import { Users, ShieldCheck, Activity } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, CalendarCheck, ShieldAlert } from 'lucide-react'
+import HeaderBox from '@/components/HeaderBox' 
+import { cn } from "@/lib/utils"
+import { getAllUsers } from '@/lib/actions/user.actions'
 
-const JawatankuasaPage = async () => {
-  const loggedIn = await getLoggedInUser();
-  if (loggedIn?.role !== 'admin') redirect('/');
+import KJActivityTable from '@/components/KJActivityTable'
+import MemberManagementTable from '@/components/MemberManagementTable'
 
+export default async function AhliJawatankuasaPage() {
   const allUsers = await getAllUsers();
-  const committeeMembers = await getCommitteeMembers(); // Fetch the registered members
+  
+  // Filter users by role
+  const kjUsers = allUsers.filter((user: any) => user.role === 'kj');
+  const membersOnly = allUsers.filter((user: any) => user.role === 'member');
+
+  const stats = [
+    { label: 'Total KJ (BOD)', value: kjUsers.length.toString(), icon: ShieldCheck, iconColor: 'text-blue-600', bg: 'bg-blue-50' },
+    { label: 'Ahli Terdaftar', value: membersOnly.length.toString(), icon: Users, iconColor: 'text-purple-600', bg: 'bg-purple-50' },
+    { label: 'Aktiviti Keseluruhan', value: allUsers.length.toString(), icon: Activity, iconColor: 'text-green-600', bg: 'bg-green-50' },
+  ];
 
   return (
-    <section className="flex flex-1 flex-col gap-8 p-8 md:p-12 bg-gray-25 overflow-y-auto overflow-x-hidden">
+    <section className="flex flex-col gap-8 p-6 md:p-10 bg-slate-50 min-h-screen">
       <HeaderBox 
-        title="Pengurusan Jawatankuasa"
-        subtext="Urus profil lantikan, rekod kehadiran mesyuarat, dan kawal akses sistem."
+        title="Pengurusan Ahli Jawatankuasa"
+        subtext="Pantau prestasi kelulusan Ketua Jabatan dan urus peranan ahli organisasi."
       />
 
-      <Tabs defaultValue="lantikan" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 max-w-[600px] mb-8 bg-gray-100 p-1">
-          <TabsTrigger value="lantikan" className="gap-2">
-            <Users size={16} /> Profil & Lantikan
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {stats.map((stat) => (
+          <div key={stat.label} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center gap-5">
+            <div className={cn("p-4 rounded-xl", stat.bg)}>
+              <stat.icon className={cn("size-6", stat.iconColor)} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">{stat.label}</p>
+              <p className="text-24 font-black text-gray-900">{stat.value}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <Tabs defaultValue="kj-list" className="w-full">
+        <TabsList className="bg-white border border-gray-200 p-1 rounded-xl mb-8 w-full md:w-auto">
+          <TabsTrigger 
+            value="kj-list" 
+            className="rounded-lg px-8 py-2.5 font-bold data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all uppercase text-12"
+          >
+            Prestasi Ketua Jabatan
           </TabsTrigger>
-          <TabsTrigger value="kehadiran" className="gap-2">
-            <CalendarCheck size={16} /> Kehadiran
-          </TabsTrigger>
-          <TabsTrigger value="akses" className="gap-2">
-            <ShieldAlert size={16} /> Kawalan Akses
+          <TabsTrigger 
+            value="members" 
+            className="rounded-lg px-8 py-2.5 font-bold data-[state=active]:bg-blue-600 data-[state=active]:text-white transition-all uppercase text-12"
+          >
+            Senarai Ahli & Promosi
           </TabsTrigger>
         </TabsList>
 
-        {/* TAB 1: REGISTRATION & LIST */}
-        <TabsContent value="lantikan" className="space-y-8 animate-in fade-in duration-500">
-            <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-              <div className="xl:col-span-1">
-                <CommitteeForm />
-              </div>
-              <div className="xl:col-span-2">
-                {/* We can add a Table here later to show current members */}
-                <div className="bg-white p-6 rounded-xl border shadow-sm">
-                   <h3 className="font-bold mb-4">Senarai Lantikan Aktif</h3>
-                   <p className="text-12 text-gray-500 italic">Gunakan borang untuk menambah ahli baru.</p>
-                </div>
-              </div>
+        <TabsContent value="kj-list" className="animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+            <div className="p-6 border-b border-gray-50 bg-slate-50/50">
+              <h3 className="font-bold text-gray-900 uppercase text-14">Rekod Kelulusan BOD</h3>
             </div>
+            {/* Pass the KJ users to this table */}
+            <KJActivityTable kjList={kjUsers} />
+          </div>
         </TabsContent>
 
-        {/* TAB 2: ATTENDANCE TRACKER */}
-        <TabsContent value="kehadiran" className="animate-in fade-in duration-500">
-            <AttendanceTracker members={committeeMembers} />
-        </TabsContent>
-
-        {/* TAB 3: ROLE MANAGEMENT */}
-        <TabsContent value="akses" className="animate-in fade-in duration-500">
-            <RoleManagement users={allUsers} />
+        <TabsContent value="members" className="animate-in fade-in slide-in-from-bottom-2 duration-300 outline-none">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+             <div className="p-6 border-b border-gray-50 bg-slate-50/50 flex justify-between items-center">
+              <h3 className="font-bold text-gray-900 uppercase text-14">Pengurusan Peranan Ahli</h3>
+              <span className="hidden md:inline-block text-[10px] font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full italic">
+                Nota: Hanya KP boleh menukar peranan ahli kepada KJ
+              </span>
+            </div>
+            {/* Pass the Member users to this table */}
+            <MemberManagementTable members={membersOnly} />
+          </div>
         </TabsContent>
       </Tabs>
     </section>
   )
 }
-
-export default JawatankuasaPage

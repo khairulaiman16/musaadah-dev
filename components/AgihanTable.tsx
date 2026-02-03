@@ -25,20 +25,27 @@ import {
   ChevronRight, 
   Loader2, 
   MoreVertical,
-  Filter // Added for the filter icon
+  Filter,
+  User,
+  Calendar // Added for the date icon
 } from "lucide-react"
 import { updateAgihanStatus } from "@/lib/actions/wang-keluar.actions"
 import { useToast } from "@/hooks/use-toast"
+import AgihanDetailModal from "./AgihanDetailModal" // Import the new modal
 
 export default function AgihanTable({ agihan, isAdmin }: { agihan: any[], isAdmin: boolean }) {
   const { toast } = useToast()
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("all") // Default to "all"
+  const [statusFilter, setStatusFilter] = useState("all") 
   const [currentPage, setCurrentPage] = useState(1)
   const [isUpdating, setIsUpdating] = useState<string | null>(null)
+  
+  // NEW: State for the Detail Modal
+  const [selectedItem, setSelectedItem] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const itemsPerPage = 10
 
-  // Updated filtering logic to handle both search and status
   const filteredData = agihan.filter((item) => {
     const matchesSearch = item.penerima.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          item.tujuan.toLowerCase().includes(searchTerm.toLowerCase());
@@ -71,6 +78,12 @@ export default function AgihanTable({ agihan, isAdmin }: { agihan: any[], isAdmi
     }
   }
 
+  // NEW: Handler to open details
+  const handleRowClick = (item: any) => {
+    setSelectedItem(item);
+    setIsModalOpen(true);
+  }
+
   return (
     <div className="flex flex-col gap-4 bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
@@ -80,7 +93,6 @@ export default function AgihanTable({ agihan, isAdmin }: { agihan: any[], isAdmi
         </div>
         
         <div className="flex flex-col sm:flex-row w-full md:w-auto gap-2">
-          {/* Status Filter - Modern Select */}
           <div className="relative">
              <Select onValueChange={(value) => { setStatusFilter(value); setCurrentPage(1); }} defaultValue="all">
                 <SelectTrigger className="w-[140px] h-10 border-gray-200 bg-gray-50/50 text-12 font-medium">
@@ -100,7 +112,6 @@ export default function AgihanTable({ agihan, isAdmin }: { agihan: any[], isAdmi
              </Select>
           </div>
 
-          {/* Search Input */}
           <div className="relative w-full md:w-80">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <Input 
@@ -121,6 +132,7 @@ export default function AgihanTable({ agihan, isAdmin }: { agihan: any[], isAdmi
           <TableHeader className="bg-gray-50/50">
             <TableRow className="hover:bg-transparent">
               <TableHead className="font-bold text-gray-900 py-4 text-13">Penerima</TableHead>
+              <TableHead className="font-bold text-gray-900 text-13">Tarikh Cadangan</TableHead>
               <TableHead className="font-bold text-gray-900 text-13">Tujuan</TableHead>
               <TableHead className="font-bold text-gray-900 text-13">Kategori</TableHead>
               <TableHead className="font-bold text-gray-900 text-right text-13">Jumlah (RM)</TableHead>
@@ -131,13 +143,24 @@ export default function AgihanTable({ agihan, isAdmin }: { agihan: any[], isAdmi
           <TableBody>
             {currentItems.length > 0 ? (
               currentItems.map((item) => (
-                <TableRow key={item.$id} className="hover:bg-gray-50/30 transition-colors border-b border-gray-50">
+                <TableRow 
+                  key={item.$id} 
+                  className="hover:bg-gray-50/30 transition-colors border-b border-gray-50 cursor-pointer"
+                  onClick={() => handleRowClick(item)} // Row click triggers the modal
+                >
                   <TableCell className="py-4">
-                    <div className="flex flex-col">
+                    <div className="flex flex-col gap-1">
                       <span className="font-bold text-14 text-gray-900">{item.penerima}</span>
-                      <span className="text-11 text-gray-400 uppercase tracking-tighter">
-                        {new Date(item.tarikhKeluar).toLocaleDateString('en-GB')}
-                      </span>
+                      <div className="flex items-center gap-1 text-[10px] text-blue-600 font-medium bg-blue-50 w-fit px-1.5 py-0.5 rounded">
+                        <User size={10} />
+                        <span className="uppercase tracking-wide">{item.urussetiaName || 'TIADA REKOD PEGAWAI'}</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-13 text-gray-600 font-medium">
+                      <Calendar size={14} className="text-gray-400" />
+                      {new Date(item.tarikhKeluar).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
                     </div>
                   </TableCell>
                   <TableCell className="text-14 text-gray-600 font-medium">{item.tujuan}</TableCell>
@@ -158,7 +181,7 @@ export default function AgihanTable({ agihan, isAdmin }: { agihan: any[], isAdmi
                     </span>
                   </TableCell>
                   {isAdmin && (
-                    <TableCell className="text-center">
+                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}> {/* Stop propagation to avoid opening modal when clicking select */}
                       <div className="flex justify-center">
                         <Select
                           disabled={isUpdating === item.$id}
@@ -167,7 +190,7 @@ export default function AgihanTable({ agihan, isAdmin }: { agihan: any[], isAdmi
                           <SelectTrigger className="h-8 w-[100px] text-[10px] font-bold border-gray-200 bg-gray-50/50 hover:bg-gray-100 transition-all">
                             <div className="flex items-center gap-1">
                               {isUpdating === item.$id ? <Loader2 size={12} className="animate-spin" /> : <MoreVertical size={12} />}
-                              <SelectValue placeholder={['approved', 'rejected'].includes(item.status) ? "SET" : "SET"} />
+                              <SelectValue placeholder="SET" />
                             </div>
                           </SelectTrigger>
                           <SelectContent className="bg-white border-gray-200 shadow-md">
@@ -185,7 +208,7 @@ export default function AgihanTable({ agihan, isAdmin }: { agihan: any[], isAdmi
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={isAdmin ? 6 : 5} className="h-32 text-center text-gray-400 text-14">
+                <TableCell colSpan={isAdmin ? 7 : 6} className="h-32 text-center text-gray-400 text-14">
                    Tiada rekod {statusFilter !== "all" ? `berstatus ${statusFilter.toUpperCase()}` : ""} dijumpai.
                 </TableCell>
               </TableRow>
@@ -221,6 +244,13 @@ export default function AgihanTable({ agihan, isAdmin }: { agihan: any[], isAdmi
           </div>
         </div>
       )}
+
+      {/* NEW: Modal Integration */}
+      <AgihanDetailModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        item={selectedItem} 
+      />
     </div>
   )
 }

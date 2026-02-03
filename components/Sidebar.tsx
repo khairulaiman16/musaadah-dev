@@ -9,9 +9,10 @@ import Footer from './Footer'
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 
+
 const Sidebar = ({ user }: SiderbarProps) => {
   const pathname = usePathname();
-  const isAdmin = user?.role === 'admin';
+  const role = user?.role; // 'urussetia', 'kj', or 'kp'
   
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
 
@@ -34,7 +35,13 @@ const Sidebar = ({ user }: SiderbarProps) => {
           // Use the Lucide Icon component we defined in constants
           const Icon = item.icon;
 
-          if (item.label === 'Ahli Jawatankuasa' && !isAdmin) return null;
+          // ROLE-BASED VISIBILITY LOGIC
+          // Only KP sees the Executive Panel and Committee Management
+          if (item.label === 'Executive Panel' && role !== 'kp') return null;
+          if (item.label === 'Ahli Jawatankuasa' && role !== 'kp') return null;
+          
+          // Urussetia should not see the Approval (Kelulusan) section
+          if (item.label === 'Kelulusan BOD' && role === 'urussetia') return null;
 
           return (
             <div key={item.label} className="flex flex-col">

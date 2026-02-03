@@ -32,7 +32,7 @@ const WangKeluarDashboard = async () => {
         
         <div className="flex items-center gap-3">
           <Link href="/wang-keluar/agihan-baru"> 
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm text-14">
+            <Button className="bg-blue-600 hover:bg-blue-700 !text-white gap-2 shadow-sm text-14">
               <PlusCircle size={18} /> Agihan Baru
             </Button>
           </Link>
